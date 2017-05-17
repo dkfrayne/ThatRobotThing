@@ -14,6 +14,7 @@ public class Robot {
 
     private double[] position;
     private double[] orientation;
+	private int speed, turning;
 
 
         /*
@@ -30,6 +31,8 @@ public class Robot {
     public Robot() {
         position = new double[] {0, 0};
         orientation = new double[] {0, 0};
+	speed = MainActivity.DEFAULT_PWM;
+	turning = MainActivity.DEFAULT_STEERING;//I forget exactly what this is called
     }
 
         /*
@@ -40,32 +43,65 @@ public class Robot {
          */
 
     public void gotoLocation(double[] target) {
+	double angleTolerance = 5;
+	    //target[0] = x
+	    //target[1] = y
         double[] targetOrientation = deltaVector(target);
-        targetOrientation[0] = targetOrientation[0]/distance(target);
-        targetOrientation[1] = targetOrientation[1]/distance(target);
-        double tolerance = 0.1;
-		/*
-		 * for double tolerance, I chose 0.1 arbitrarily, but it should be about right.
-		 * you'll have to experiment with the robot's turning speed and reaction time
-		 * to figure out whether it's high or low. (ask me if this doesn't make sense)
-		 */
-        do {
-			/*
-			 * turnLeft();?
-			 * turnRight();?
-			 * basically, in this loop just do something to rotate the robot until the orientation
-			 * condition is met. when it's met, the robot should be facing the target location.
-			 * you can make the robot rotate by setting the motors to equal/opposite values
-			 * 		-they should be relatively low values so it rotates slowly and it'll be most accurate
-			 */
-        } while(Math.abs(targetOrientation[1]-orientation[1]) < tolerance
-                && Math.abs(targetOrientation[0]-orientation[0]) < tolerance);
-        //don't forget to kill the motors so it stops rotating
-        while(distance(target) > 0) {
-            //drive forward
-            //probably want to check every so often that you're still facing the right direction
+        targetOrientation[0] /= distance(target);
+        targetOrientation[1] /= distance(target);
+	    
+	faceLocation(targetOrientation, angleTolerance);
+        
+        while(distance(target) > 0.5) {
+		targetOrientation = deltaVector(target);
+        	targetOrientation[0] /= distance(target);
+        	targetOrientation[1] /= distance(target);
+            	setSpeed(400);
+	    	setSteering(Math.atan2(targetOrientation[1], targetOrientation[0]) 
+				- Math.atan2(orientation[1], orientation[0]));
         }
     }
+	
+	public void faceLocation(double[] targetOrientation, double tolerance) {
+		double tolerance1 = 90;
+		double tolerance2 = 45;
+		double angle = Math.atan2(targetOrientation[1], targetOrientation[0]) 
+				- Math.atan2(orientation[1], orientation[0]);
+		
+		while(Math.abs(angle) > tolerance1) {
+			setSteering(angle*4); //sign may need to be flipped
+        	} 
+		while(Math.abs(angle) > tolerance2) {
+			setSteering(angle*3); //sign needs to be same as above
+		}
+		while(Math.abs(angle > tolerance) {
+			setSteering(Math.signum(angle)*100);
+		}
+		setSteering(0);
+        	
+	}
+	
+	
+	/*
+	 * just in case you need some
+	 * amphetamines to get through the day
+	 */
+	public int getSpeed() {
+		return speed;	
+	}
+	public void setSpeed(int s) {
+		speed = s;
+		MainActivity.set_speed(MainActivity.DEFAULT_PWM + speed);
+	}
+	public int getSteering() {
+		return steering;
+	}
+	public void setSteering(int s) {
+		steering = s;
+		MainActivity.set_speed(MainActivity.DEFAULT_PWM + steering);
+	}
+	
+	
     /*
      * vector between position and target
      */
